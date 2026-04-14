@@ -60,7 +60,7 @@ export class MessageRepository {
         senderId: data.senderId,
         type: data.input.type,
         ciphertext: data.input.ciphertext,
-        mediaKey: data.input.mediaKey,
+        mediaKey: data.input.mediaKey ?? null,
       },
       select: messageSelect,
     }) as unknown as MessageRow;

@@ -13,6 +13,7 @@ import {
   generateRefreshToken,
 } from './otp.js';
 import type { TokenPair } from './schema.js';
+import type { JwtPayload } from '../../shared/types.js';
 
 export class AuthService {
   constructor(
@@ -80,7 +81,7 @@ export class AuthService {
     const accessToken = this.app.jwt.sign({
       sub: session.userId,
       deviceId: session.deviceId,
-    });
+    } as JwtPayload);
 
     return {
       accessToken,
@@ -94,7 +95,7 @@ export class AuthService {
   }
 
   private async createTokenPair(userId: string, deviceId: string): Promise<TokenPair> {
-    const accessToken = this.app.jwt.sign({ sub: userId, deviceId });
+    const accessToken = this.app.jwt.sign({ sub: userId, deviceId } as JwtPayload);
 
     const refreshToken = generateRefreshToken();
     const expiresAt = new Date(Date.now() + config.JWT_REFRESH_TTL * 1000);

@@ -52,7 +52,7 @@ export class NotificationService {
           token,
           title: payload.title,
           body: payload.body,
-          data: payload.data,
+          ...(payload.data !== undefined && { data: payload.data }),
         } satisfies PushJobData,
       })),
     );

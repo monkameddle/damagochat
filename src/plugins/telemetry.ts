@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import fp from 'fastify-plugin';
 import { metrics, trace } from '@opentelemetry/api';
+import type { Span } from '@opentelemetry/api';
 
 export default fp(async function telemetryPlugin(app: FastifyInstance) {
   const meter = metrics.getMeter('fastify');
@@ -36,6 +37,6 @@ export default fp(async function telemetryPlugin(app: FastifyInstance) {
   app.addHook('onRequest', async (req) => {
     const tracer = trace.getTracer('fastify');
     const span = tracer.startSpan(`${req.method} ${req.url}`);
-    (req as typeof req & { _span: ReturnType<typeof span.end> })._span = span;
+    (req as typeof req & { _span: Span })._span = span;
   });
 });

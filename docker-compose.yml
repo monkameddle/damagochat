@@ -81,9 +81,9 @@ services:
   ntfy:
     image: binwiederhier/ntfy:latest
     restart: unless-stopped
-    command: serve --base-url http://localhost:8080
+    command: serve --base-url http://localhost:8081
     ports:
-      - '8080:80'
+      - '8081:80'
     volumes:
       - ntfy_data:/var/lib/ntfy
     healthcheck:

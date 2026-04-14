@@ -34,7 +34,7 @@ export class SearchService {
   }
 
   async searchMessages(
-    userId: string,
+    _userId: string,
     query: MessageSearchQuery,
   ): Promise<SearchResponse<MessageSearchResult>> {
     const index = getMeilisearch().index(INDEXES.MESSAGES);
@@ -44,10 +44,11 @@ export class SearchService {
       filter.push(`chatId = "${query.chatId}"`);
     }
 
+    const filterValue = filter.length > 0 ? filter.join(' AND ') : undefined;
     const result = await index.search<MessageIndexDoc>(query.q, {
       limit: query.limit,
       offset: query.offset,
-      filter: filter.length > 0 ? filter.join(' AND ') : undefined,
+      ...(filterValue !== undefined && { filter: filterValue }),
       attributesToSearchOn: ['plaintext'],
       attributesToRetrieve: ['id', 'chatId', 'senderId', 'plaintext', 'sentAt'],
       attributesToHighlight: ['plaintext'],

@@ -1,9 +1,9 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { SearchService } from './service.js';
 import { UserSearchQuerySchema, MessageSearchQuerySchema } from './schema.js';
 import type { JwtPayload } from '../../shared/types.js';
 
-export default async function searchRouter(app: FastifyInstance) {
+const searchRouter: FastifyPluginAsync = async function searchRouter(app: FastifyInstance) {
   const service = new SearchService();
 
   app.addHook('preHandler', app.authenticate);
@@ -20,4 +20,6 @@ export default async function searchRouter(app: FastifyInstance) {
     const query = MessageSearchQuerySchema.parse(req.query);
     return service.searchMessages(sub, query);
   });
-}
+};
+
+export default searchRouter;

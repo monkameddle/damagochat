@@ -35,7 +35,8 @@ export function initTelemetry(): void {
     metricReader: new PeriodicExportingMetricReader({
       exporter: new OTLPMetricExporter({ url: OTEL_EXPORTER_ENDPOINT }),
       exportIntervalMillis: 15_000,
-    }),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any,
     instrumentations: [
       getNodeAutoInstrumentations({
         '@opentelemetry/instrumentation-fs': { enabled: false }, // too noisy

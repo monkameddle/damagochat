@@ -33,9 +33,13 @@ export class UserRepository {
   }
 
   async updateMe(id: string, data: UpdateMeInput): Promise<UserProfile> {
+    const updateData: { displayName?: string; about?: string; avatarKey?: string } = {};
+    if (data.displayName !== undefined) updateData.displayName = data.displayName;
+    if (data.about !== undefined) updateData.about = data.about;
+    if (data.avatarKey !== undefined) updateData.avatarKey = data.avatarKey;
     return this.db.user.update({
       where: { id },
-      data,
+      data: updateData,
       select: {
         id: true,
         phoneNumber: true,

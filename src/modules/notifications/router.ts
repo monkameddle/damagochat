@@ -1,11 +1,11 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { getPrisma } from '../../lib/prisma.js';
 import { NotificationRepository } from './repository.js';
 import { NotificationService } from './service.js';
 import { RegisterTokenSchema } from './schema.js';
 import type { JwtPayload } from '../../shared/types.js';
 
-export default async function notificationsRouter(app: FastifyInstance) {
+const notificationsRouter: FastifyPluginAsync = async function notificationsRouter(app: FastifyInstance) {
   const service = new NotificationService(new NotificationRepository(getPrisma()));
 
   app.addHook('preHandler', app.authenticate);
@@ -24,4 +24,6 @@ export default async function notificationsRouter(app: FastifyInstance) {
     await service.unregisterToken(sub, deviceId);
     return reply.status(204).send();
   });
-}
+};
+
+export default notificationsRouter;

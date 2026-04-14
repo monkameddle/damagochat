@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { getPrisma } from '../../lib/prisma.js';
 import { MediaRepository } from './repository.js';
 import { MediaService } from './service.js';
@@ -6,7 +6,7 @@ import { ChatRepository } from '../chats/repository.js';
 import { PrepareUploadSchema } from './schema.js';
 import type { JwtPayload } from '../../shared/types.js';
 
-export default async function mediaRouter(app: FastifyInstance) {
+const mediaRouter: FastifyPluginAsync = async function mediaRouter(app: FastifyInstance) {
   const service = new MediaService(
     new MediaRepository(getPrisma()),
     new ChatRepository(getPrisma()),
@@ -29,4 +29,6 @@ export default async function mediaRouter(app: FastifyInstance) {
     const { chatId } = req.query as { chatId: string };
     return service.getMedia(mediaId, sub, chatId);
   });
-}
+};
+
+export default mediaRouter;

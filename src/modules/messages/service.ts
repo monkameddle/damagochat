@@ -17,13 +17,19 @@ export class MessageService {
     const isMember = await this.chatRepo.isMember(chatId, userId);
     if (!isMember) throw new ForbiddenError('Not a member of this chat');
 
-    const items = await this.msgRepo.listForChat(chatId, opts);
+    const items = await this.msgRepo.listForChat(chatId, {
+      limit: opts.limit,
+      ...(opts.cursor !== undefined && { cursor: opts.cursor }),
+    });
     const nextCursor =
       items.length === opts.limit
         ? items[items.length - 1]!.sentAt.toISOString()
         : undefined;
 
-    return { items, nextCursor };
+    return {
+      items,
+      ...(nextCursor !== undefined && { nextCursor }),
+    };
   }
 
   async getOne(

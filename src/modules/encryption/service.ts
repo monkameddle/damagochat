@@ -27,7 +27,7 @@ export class EncryptionService {
   }
 
   async fetchBundle(
-    requestingUserId: string,
+    _requestingUserId: string,
     targetUserId: string,
   ): Promise<PreKeyBundleResponse> {
     const bundle = await this.repo.findBundle(targetUserId);

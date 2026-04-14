@@ -59,7 +59,7 @@ export function initRedisSubscriber(app: FastifyInstance): void {
       if (channel.startsWith('chat:')) {
         const chatId = channel.slice(5);
         // Fan-out to all locally connected members of this chat
-        for (const [userId, sockets] of connections.entries()) {
+        for (const [_userId, _sockets] of connections.entries()) {
           // We need to know if this userId is in this chatId.
           // We optimistically push to all connected users and let the client ignore if not relevant.
           // For a production system you'd maintain a chatId→userIds mapping in Redis.
@@ -70,10 +70,10 @@ export function initRedisSubscriber(app: FastifyInstance): void {
         void pushToChatMembers(chatId, data);
       } else if (channel.startsWith('presence:')) {
         // Fan-out presence updates to contacts who are online
-        const update = data as { userId: string; online: boolean; lastSeen?: string };
+        const update = data as unknown as { userId: string; online: boolean; lastSeen?: string };
         // Notify all locally connected users (they filter on client)
-        for (const [, sockets] of connections.entries()) {
-          for (const socket of sockets) {
+        for (const [, userSockets] of connections.entries()) {
+          for (const socket of userSockets) {
             send(socket, { type: 'presence.update', payload: update });
           }
         }
@@ -154,7 +154,7 @@ export default async function wsGateway(app: FastifyInstance): Promise<void> {
     await setOnline(userId);
 
     // Heartbeat — ping every 30s from client keeps presence alive
-    socket.on('message', async (raw) => {
+    socket.on('message', async (raw: Buffer | ArrayBuffer | Buffer[]) => {
       let msg: WsMessage;
       try {
         msg = JSON.parse(raw.toString()) as WsMessage;

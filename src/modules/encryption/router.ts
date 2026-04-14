@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyPluginAsync } from 'fastify';
 import { getPrisma } from '../../lib/prisma.js';
 import { EncryptionRepository } from './repository.js';
 import { EncryptionService } from './service.js';
@@ -18,7 +18,7 @@ const ReplenishSchema = z.object({
     .max(100),
 });
 
-export default async function encryptionRouter(app: FastifyInstance) {
+const encryptionRouter: FastifyPluginAsync = async function encryptionRouter(app: FastifyInstance) {
   const service = new EncryptionService(new EncryptionRepository(getPrisma()));
 
   app.addHook('preHandler', app.authenticate);
@@ -52,4 +52,6 @@ export default async function encryptionRouter(app: FastifyInstance) {
     const count = await service.getPreKeyCount(sub);
     return { count };
   });
-}
+};
+
+export default encryptionRouter;

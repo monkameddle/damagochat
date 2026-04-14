@@ -37,7 +37,7 @@ export async function sendPushNotification(
   await app.messaging().send({
     token,
     notification: { title: payload.title, body: payload.body },
-    data: payload.data,
+    ...(payload.data !== undefined && { data: payload.data }),
     android: { priority: 'high' },
     apns: { payload: { aps: { sound: 'default', badge: 1 } } },
   });

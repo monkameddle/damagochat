@@ -1,5 +1,4 @@
 import type { PrismaClient } from '@prisma/client';
-import type { MediaObjectResult } from './schema.js';
 
 export class MediaRepository {
   constructor(private readonly db: PrismaClient) {}

@@ -24,7 +24,7 @@ export default fp(async function authPlugin(app: FastifyInstance) {
     sign: { expiresIn: config.JWT_ACCESS_TTL },
   });
 
-  app.decorate('authenticate', async function (req: FastifyRequest, reply: FastifyReply) {
+  app.decorate('authenticate', async function (req: FastifyRequest, _reply: FastifyReply) {
     try {
       await req.jwtVerify();
     } catch {

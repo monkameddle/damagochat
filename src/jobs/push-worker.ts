@@ -5,7 +5,11 @@ import { sendPushNotification } from '../lib/push.js';
 async function processJob(job: Job<PushJobData>): Promise<void> {
   const { token, title, body, data } = job.data;
 
-  await sendPushNotification(token, { title, body, data });
+  await sendPushNotification(token, {
+    title,
+    body,
+    ...(data !== undefined && { data }),
+  });
 }
 
 export function startPushWorker() {

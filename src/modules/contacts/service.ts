@@ -27,7 +27,7 @@ export class ContactService {
     return this.contactRepo.create({
       userId,
       contactUserId: target.id,
-      nickname: input.nickname,
+      ...(input.nickname !== undefined && { nickname: input.nickname }),
     });
   }
 

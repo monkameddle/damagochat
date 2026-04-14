@@ -1,9 +1,10 @@
 import type { FastifyInstance } from 'fastify';
+import type { FastifyError } from 'fastify';
 import fp from 'fastify-plugin';
 import { AppError } from '../shared/errors.js';
 
 export default fp(async function errorHandler(app: FastifyInstance) {
-  app.setErrorHandler((error, request, reply) => {
+  app.setErrorHandler((error: FastifyError, request, reply) => {
     if (error instanceof AppError) {
       return reply.status(error.statusCode).send({
         error: {

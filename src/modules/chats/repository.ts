@@ -99,9 +99,12 @@ export class ChatRepository {
   }
 
   async update(chatId: string, data: UpdateChatInput): Promise<ChatSummary> {
+    const updateData: { name?: string; avatarKey?: string } = {};
+    if (data.name !== undefined) updateData.name = data.name;
+    if (data.avatarKey !== undefined) updateData.avatarKey = data.avatarKey;
     return this.db.chat.update({
       where: { id: chatId },
-      data,
+      data: updateData,
       select: chatSelect,
     }) as unknown as ChatSummary;
   }
