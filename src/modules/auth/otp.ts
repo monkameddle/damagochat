@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from 'crypto';
+import type { FastifyBaseLogger } from 'fastify';
 import { getRedis } from '../../lib/redis.js';
 import { config } from '../../config/index.js';
 
@@ -16,7 +17,7 @@ export async function generateAndStoreOtp(phoneNumber: string): Promise<string> 
   return otp;
 }
 
-export async function sendOtp(phoneNumber: string, otp: string): Promise<void> {
+export async function sendOtp(phoneNumber: string, otp: string, log?: FastifyBaseLogger): Promise<void> {
   if (config.OTP_STUB) return; // dev: log only, no actual send
 
   if (!config.SEVEN_API_KEY) {
@@ -36,10 +37,25 @@ export async function sendOtp(phoneNumber: string, otp: string): Promise<void> {
     }),
   });
 
+  const body = await res.text();
+
   if (!res.ok) {
-    const body = await res.text();
     throw new Error(`seven.io SMS failed (${res.status}): ${body}`);
   }
+
+  // seven.io returns HTTP 200 even for errors; check success code in body
+  // Response is either JSON { success: "100", ... } or legacy plain text "100"
+  let parsed: { success?: string; messages?: { success: boolean; error_text?: string | null }[] } | null = null;
+  try { parsed = JSON.parse(body); } catch { /* non-JSON response */ }
+
+  const successCode = parsed && typeof parsed === 'object' ? parsed.success : body.trim();
+
+  if (successCode !== '100') {
+    log?.error({ sevenResponse: parsed ?? body }, 'seven.io SMS rejected');
+    throw new Error(`seven.io SMS rejected (code ${successCode}): ${body}`);
+  }
+
+  log?.info({ sevenResponse: parsed ?? body }, 'seven.io SMS sent');
 }
 
 export async function verifyOtp(

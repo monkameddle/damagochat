@@ -19,7 +19,7 @@ const envSchema = z.object({
   S3_ACCESS_KEY: z.string().min(1),
   S3_SECRET_KEY: z.string().min(1),
   S3_REGION: z.string().default('us-east-1'),
-  S3_FORCE_PATH_STYLE: z.coerce.boolean().default(true),
+  S3_FORCE_PATH_STYLE: z.string().transform(v => v !== 'false').default('true'),
 
   MEDIA_MAX_SIZE_MB: z.coerce.number().int().positive().default(64),
 
@@ -34,7 +34,7 @@ const envSchema = z.object({
   MEILISEARCH_URL: z.string().url(),
   MEILISEARCH_KEY: z.string().min(1),
 
-  OTP_STUB: z.coerce.boolean().default(false),
+  OTP_STUB: z.string().transform(v => v === 'true').default('false'),
   SEVEN_API_KEY: z.string().optional(),
   SEVEN_FROM: z.string().default('Damagochat'),
 });

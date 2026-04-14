@@ -23,10 +23,11 @@ export class AuthService {
 
   async requestOtp(phoneNumber: string): Promise<void> {
     const otp = await generateAndStoreOtp(phoneNumber);
+    this.app.log.info({ phoneNumber, otpStub: config.OTP_STUB }, 'OTP requested');
     if (config.NODE_ENV === 'development') {
       this.app.log.info({ phoneNumber, otp }, 'Dev OTP generated');
     }
-    await sendOtp(phoneNumber, otp);
+    await sendOtp(phoneNumber, otp, this.app.log);
   }
 
   async register(input: {
