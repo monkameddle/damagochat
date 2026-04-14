@@ -1,0 +1,59 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: damagochat-worker
+  namespace: damagochat
+  labels:
+    app: damagochat-worker
+    app.kubernetes.io/component: worker
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: damagochat-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: damagochat-worker
+    spec:
+      terminationGracePeriodSeconds: 60  # longer — allow in-flight jobs to finish
+      containers:
+        - name: worker
+          image: damagochat:latest
+          command: ["node", "dist/worker.js"]
+          envFrom:
+            - configMapRef:
+                name: damagochat-config
+            - secretRef:
+                name: damagochat-secrets
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: "damagochat-worker"
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "1Gi"   # sharp image processing is memory-intensive
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app: damagochat-worker
+                topologyKey: kubernetes.io/hostname

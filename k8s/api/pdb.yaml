@@ -1,0 +1,10 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: damagochat-api
+  namespace: damagochat
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: damagochat-api

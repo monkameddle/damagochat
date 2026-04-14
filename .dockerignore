@@ -1,0 +1,10 @@
+node_modules
+dist
+.env
+*.env.local
+coverage
+.nyc_output
+tests
+k8s
+.github
+*.log

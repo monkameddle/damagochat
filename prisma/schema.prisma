@@ -1,0 +1,177 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum ChatType {
+  DIRECT
+  GROUP
+}
+
+enum ChatMemberRole {
+  MEMBER
+  ADMIN
+}
+
+enum MessageType {
+  TEXT
+  IMAGE
+  VIDEO
+  AUDIO
+  DOCUMENT
+}
+
+enum MessageStatusType {
+  DELIVERED
+  READ
+}
+
+model User {
+  id          String   @id @default(uuid())
+  phoneNumber String   @unique
+  displayName String
+  avatarKey   String?
+  publicKey   String?  // base64 identity public key
+  about       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sessions       Session[]
+  contacts       Contact[]       @relation("UserContacts")
+  contactOf      Contact[]       @relation("ContactUser")
+  chatMembers    ChatMember[]
+  sentMessages   Message[]       @relation("MessageSender")
+  messageStatuses MessageStatus[]
+  preKeyBundle   PreKeyBundle?
+
+  @@index([phoneNumber])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  deviceId     String
+  refreshToken String   @unique
+  expiresAt    DateTime
+  fcmToken     String?  // FCM / APNs push token, set after login
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([refreshToken])
+}
+
+model Contact {
+  userId        String
+  contactUserId String
+  nickname      String?
+  createdAt     DateTime @default(now())
+
+  user        User @relation("UserContacts", fields: [userId], references: [id], onDelete: Cascade)
+  contactUser User @relation("ContactUser", fields: [contactUserId], references: [id], onDelete: Cascade)
+
+  @@id([userId, contactUserId])
+  @@index([userId])
+}
+
+model Chat {
+  id        String   @id @default(uuid())
+  type      ChatType
+  name      String?  // group name
+  avatarKey String?  // group avatar
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members  ChatMember[]
+  messages Message[]
+}
+
+model ChatMember {
+  chatId   String
+  userId   String
+  role     ChatMemberRole @default(MEMBER)
+  joinedAt DateTime       @default(now())
+
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([chatId, userId])
+  @@index([chatId])
+  @@index([userId])
+}
+
+model Message {
+  id         String      @id @default(uuid())
+  chatId     String
+  senderId   String
+  type       MessageType @default(TEXT)
+  ciphertext String      // encrypted payload (opaque to server)
+  mediaKey   String?     // media encryption key metadata
+  status     String      @default("sent")
+  sentAt     DateTime    @default(now())
+  deletedAt  DateTime?
+
+  chat     Chat            @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  sender   User            @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  statuses MessageStatus[]
+  media    MediaObject?
+  reactions MessageReaction[]
+
+  @@index([chatId, sentAt])
+  @@index([senderId])
+}
+
+model MessageStatus {
+  messageId String
+  userId    String
+  status    MessageStatusType
+  updatedAt DateTime          @default(now()) @updatedAt
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([messageId, userId])
+  @@index([messageId])
+}
+
+model MessageReaction {
+  id        String   @id @default(uuid())
+  messageId String
+  userId    String
+  emoji     String
+  createdAt DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([messageId])
+}
+
+model MediaObject {
+  id           String   @id @default(uuid())
+  messageId    String   @unique
+  s3Key        String
+  mimeType     String
+  sizeBytes    Int
+  thumbnailKey String?
+  createdAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+}
+
+model PreKeyBundle {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  deviceId        String
+  identityKey     String   // base64
+  signedPreKey    Json     // { keyId, publicKey, signature }
+  preKeys         Json     // [{ keyId, publicKey }]
+  updatedAt       DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

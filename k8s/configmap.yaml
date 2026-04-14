@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: damagochat-config
+  namespace: damagochat
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  LOG_LEVEL: "info"
+  S3_REGION: "us-east-1"
+  S3_FORCE_PATH_STYLE: "false"
+  S3_BUCKET: "damagochat-media"
+  MEDIA_MAX_SIZE_MB: "64"
+  JWT_ACCESS_TTL: "900"
+  JWT_REFRESH_TTL: "2592000"
+  MEILISEARCH_URL: "http://meilisearch.damagochat.svc.cluster.local:7700"
+  OTEL_SERVICE_NAME: "damagochat"
+  OTEL_EXPORTER_OTLP_ENDPOINT: "http://otel-collector.observability.svc.cluster.local:4317"
+  OTP_STUB: "false"

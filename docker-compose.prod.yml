@@ -1,0 +1,52 @@
+# Used on the Hetzner VPS alongside docker-compose.yml:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+#
+# Differences from dev:
+#   - No MinIO (using Hetzner Object Storage)
+#   - App + worker containers added
+#   - Ports only exposed to localhost (Caddy proxies externally)
+
+services:
+  # Remove MinIO in prod — using Hetzner Object Storage instead
+  minio:
+    profiles: [dev]   # only starts with --profile dev
+  minio-init:
+    profiles: [dev]
+
+  postgres:
+    environment:
+      POSTGRES_USER: damagochat
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD required}
+      POSTGRES_DB: damagochat
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-org/damagochat}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "127.0.0.1:3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      sh -c "npx prisma migrate deploy && node dist/main.js"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    image: ghcr.io/${GITHUB_REPOSITORY:-your-org/damagochat}:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: node dist/worker.js
