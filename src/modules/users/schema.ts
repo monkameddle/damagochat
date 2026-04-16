@@ -15,7 +15,7 @@ export type UpdateMeInput = z.infer<typeof UpdateMeSchema>;
 export interface UserProfile {
   id: string;
   phoneNumber: string;
-  displayName: string;
+  displayName: string | null;
   avatarKey: string | null;
   about: string | null;
   createdAt: Date;

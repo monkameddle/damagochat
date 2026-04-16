@@ -25,7 +25,7 @@ function mapContact(raw: {
   contactUser: {
     id: string;
     phoneNumber: string;
-    displayName: string;
+    displayName: string | null;
     avatarKey: string | null;
     about: string | null;
   };

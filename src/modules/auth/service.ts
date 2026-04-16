@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify';
 import { config } from '../../config/index.js';
 import {
   UnauthorizedError,
-  ConflictError,
   ValidationError,
 } from '../../shared/errors.js';
 import { AuthRepository } from './repository.js';
@@ -30,27 +29,7 @@ export class AuthService {
     await sendOtp(phoneNumber, otp, this.app.log);
   }
 
-  async register(input: {
-    phoneNumber: string;
-    displayName: string;
-    otp: string;
-    deviceId: string;
-  }): Promise<TokenPair> {
-    const valid = await verifyOtp(input.phoneNumber, input.otp);
-    if (!valid) throw new ValidationError('Invalid or expired OTP');
-
-    const existing = await this.repo.findUserByPhone(input.phoneNumber);
-    if (existing) throw new ConflictError('Phone number already registered');
-
-    const user = await this.repo.createUser({
-      phoneNumber: input.phoneNumber,
-      displayName: input.displayName,
-    });
-
-    return this.createTokenPair(user.id, input.deviceId);
-  }
-
-  async login(input: {
+  async verify(input: {
     phoneNumber: string;
     otp: string;
     deviceId: string;
@@ -58,10 +37,15 @@ export class AuthService {
     const valid = await verifyOtp(input.phoneNumber, input.otp);
     if (!valid) throw new ValidationError('Invalid or expired OTP');
 
-    const user = await this.repo.findUserByPhone(input.phoneNumber);
-    if (!user) throw new UnauthorizedError('Phone number not registered');
+    let user = await this.repo.findUserByPhone(input.phoneNumber);
+    let isNewUser = false;
 
-    return this.createTokenPair(user.id, input.deviceId);
+    if (!user) {
+      user = await this.repo.createUser({ phoneNumber: input.phoneNumber });
+      isNewUser = true;
+    }
+
+    return this.createTokenPair(user.id, input.deviceId, isNewUser);
   }
 
   async refresh(refreshToken: string): Promise<TokenPair> {
@@ -88,6 +72,7 @@ export class AuthService {
       accessToken,
       refreshToken: newRefreshToken,
       expiresIn: config.JWT_ACCESS_TTL,
+      isNewUser: false,
     };
   }
 
@@ -95,7 +80,7 @@ export class AuthService {
     await this.repo.deleteSession(refreshToken);
   }
 
-  private async createTokenPair(userId: string, deviceId: string): Promise<TokenPair> {
+  private async createTokenPair(userId: string, deviceId: string, isNewUser: boolean): Promise<TokenPair> {
     const accessToken = this.app.jwt.sign({ sub: userId, deviceId } as JwtPayload);
 
     const refreshToken = generateRefreshToken();
@@ -103,6 +88,6 @@ export class AuthService {
 
     await this.repo.createSession({ userId, deviceId, refreshToken, expiresAt });
 
-    return { accessToken, refreshToken, expiresIn: config.JWT_ACCESS_TTL };
+    return { accessToken, refreshToken, expiresIn: config.JWT_ACCESS_TTL, isNewUser };
   }
 }

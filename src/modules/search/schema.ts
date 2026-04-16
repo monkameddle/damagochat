@@ -19,7 +19,7 @@ export type MessageSearchQuery = z.infer<typeof MessageSearchQuerySchema>;
 export interface UserSearchResult {
   id: string;
   phoneNumber: string;
-  displayName: string;
+  displayName: string | null;
   avatarKey: string | null;
 }
 
@@ -42,7 +42,7 @@ export interface SearchResponse<T> {
 export interface UserIndexDoc {
   id: string;
   phoneNumber: string;
-  displayName: string;
+  displayName: string | null;
   avatarKey: string | null;
 }
 

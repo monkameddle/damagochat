@@ -34,7 +34,7 @@ enum MessageStatusType {
 model User {
   id          String   @id @default(uuid())
   phoneNumber String   @unique
-  displayName String
+  displayName String?
   avatarKey   String?
   publicKey   String?  // base64 identity public key
   about       String?

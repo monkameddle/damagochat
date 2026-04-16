@@ -17,7 +17,7 @@ export interface ContactEntry {
   contact: {
     id: string;
     phoneNumber: string;
-    displayName: string;
+    displayName: string | null;
     avatarKey: string | null;
     about: string | null;
   };

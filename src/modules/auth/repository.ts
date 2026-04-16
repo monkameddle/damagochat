@@ -9,7 +9,6 @@ export class AuthRepository {
 
   async createUser(data: {
     phoneNumber: string;
-    displayName: string;
   }): Promise<User> {
     return this.db.user.create({ data });
   }
